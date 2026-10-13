@@ -1,4 +1,4 @@
-const VERSION='1.0.0';
+const VERSION='1.0.1';
 const CACHE='khatawati-'+VERSION;
 const FILES=['./','./index.html','./manifest.webmanifest','./storage.js','./check.html','./icon-192.png','./icon-512.png','./maskable-192.png','./maskable-512.png','./apple-touch-icon.png','./favicon-32.png'];
 const FONT_CSS='https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700&display=swap';
