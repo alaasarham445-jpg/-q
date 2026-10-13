@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>فحص خطواتي</title>
+<style>body{font-family:Tahoma,system-ui,sans-serif;margin:0;padding:18px;line-height:1.9;max-width:560px;margin-inline:auto}h1{font-size:20px}div{padding:2px 0;font-size:15px}.bad{color:#d33}.warn{color:#b8860b}.ok{color:#2a8a4a}#s{font-weight:700;margin-top:10px}</style></head>
+<body><h1>فحص تطبيق خطواتي</h1><div id="o"></div><div id="s"></div>
+<script>
+const FILES=['index.html','manifest.webmanifest','sw.js','storage.js','icon-192.png','icon-512.png','maskable-192.png','maskable-512.png','apple-touch-icon.png','favicon-32.png','check.html'];
+const o=document.getElementById('o');let bad=0;
+const add=(ok,t)=>{const d=document.createElement('div');d.className=ok===true?'ok':ok==='warn'?'warn':'bad';d.textContent=(ok===true?'✅ ':ok==='warn'?'⚠️ ':'❌ ')+t;if(ok===false)bad++;o.appendChild(d)};
+const img=u=>new Promise(r=>{const i=new Image();i.onload=()=>r([i.naturalWidth,i.naturalHeight]);i.onerror=()=>r(null);i.src=u+'?c='+Date.now()});
+(async()=>{
+ for(const f of FILES){try{const r=await fetch(f,{cache:'no-store'});add(r.ok,'الملف: '+f+(r.ok?'':' ('+r.status+')'))}catch(e){add(false,'الملف: '+f)}}
+ if(!('serviceWorker' in navigator))add(false,'Service Worker غير مدعوم (يلزم HTTPS)');
+ else{
+  const g=await navigator.serviceWorker.getRegistration();
+  if(!g)add(false,'Service Worker غير مسجّل — افتح index.html مرة واحدة أولًا');
+  else{add(!!g.active,'تسجيل Service Worker: '+(g.active?'نشط':'قيد التثبيت'));add(!!navigator.serviceWorker.controller||'warn','الصفحة تحت سيطرة Service Worker'+(navigator.serviceWorker.controller?'':' (حدّث الصفحة)'))}
+ }
+ try{const ks=(await caches.keys()).filter(k=>k.startsWith('khatawati-'));if(!ks.length)add(false,'لا يوجد كاش للتطبيق');else{const n=(await (await caches.open(ks[0])).keys()).length;add(n>=11,'الكاش '+ks[0]+': '+n+' ملف')}}catch(e){add(false,'تعذّر قراءة الكاش')}
+ try{
+  const m=await (await fetch('manifest.webmanifest',{cache:'no-store'})).json();
+  [['name'],['short_name'],['start_url'],['scope'],['lang'],['dir']].forEach(k=>add(!!m[k[0]],'manifest.'+k[0]+': '+(m[k[0]]||'ناقص')));
+  add(m.display==='standalone','manifest.display: '+m.display);
+  const ic=m.icons||[];
+  for(const x of ic){const d=await img(x.src),want=parseInt(x.sizes);add(!!d&&d[0]===want&&d[1]===want,'أيقونة '+x.src+' ('+x.purpose+') '+(d?d[0]+'x'+d[1]:'غير موجودة'))}
+  add(ic.some(x=>x.sizes==='192x192')&&ic.some(x=>x.sizes==='512x512'),'أيقونات 192 و512 موجودة');
+  add(ic.some(x=>x.purpose==='maskable'),'أيقونة maskable موجودة');
+ }catch(e){add(false,'manifest غير صالح')}
+ try{add((await navigator.storage.persisted())||'warn','التخزين الدائم (persist): '+((await navigator.storage.persisted())?'مفعّل':'غير ممنوح بعد'))}catch(e){add('warn','persist غير مدعوم')}
+ const s=document.getElementById('s');s.className=bad?'bad':'ok';s.textContent=bad?('❌ '+bad+' مشكلة'):'✅ كل شيء سليم';
+})();
+</script></body></html>
